@@ -1,6 +1,6 @@
 const express = require("express");
 const data = require("./store");
-const { v3: uuid } = require("uuid");
+const { v4: uuid } = require("uuid");
 const logger = require("./logger");
 
 const bmRouter = express.Router();
@@ -30,7 +30,7 @@ bmRouter
 
     data.push(newBm);
     logger.info(`Successful post : Bookmark ${title} was added with id: ${id}`);
-    res.status(201).send(`Bookmark ${title} was added with id: ${id}`);
+    res.status(201).json(newBm);
   });
 
 bmRouter
