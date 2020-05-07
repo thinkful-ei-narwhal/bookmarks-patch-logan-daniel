@@ -11,7 +11,6 @@ describe("Bookmark endpoints", () => {
   const authTokenTest = "Bearer my-secret";
 
   before(() => {
-    console.log(process.env.DB_TEST_URL);
     testDB = knex({
       client: 'pg',
       connection: process.env.DB_TEST_URL
@@ -43,6 +42,13 @@ describe("Bookmark endpoints", () => {
           .get(`/bookmarks/${idForTest}`)
           .set("Authorization", authTokenTest)
           .expect(201, testObjectSeed[0]);
+      });
+
+      it("should delete the bookmark specified by id", () => {
+        return supertest(app)
+          .delete("/bookmarks/1")
+          .set("Authorization", authTokenTest)
+          .expect(201);
       });
     });
 
@@ -85,12 +91,7 @@ describe("Bookmark endpoints", () => {
         expect(res.body.url).to.equal(postValues.url);
       });
   });
-  it("should delete the bookmark specified by id", () => {
-    return supertest(app)
-      .delete("/bookmarks/1")
-      .set("Authorization", authTokenTest)
-      .expect(201);
-  });
+
 });
 
 
