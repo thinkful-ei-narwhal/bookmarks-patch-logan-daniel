@@ -10,6 +10,7 @@ const { NODE_ENV, API_TOKEN } = require("./config");
 
 const app = express();
 
+
 const morganOption = NODE_ENV === "production" ? "tiny" : "common";
 
 app.use(cors());

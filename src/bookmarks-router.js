@@ -5,11 +5,13 @@ const logger = require("./logger");
 
 const bmRouter = express.Router();
 const dataParser = express.json();
+const BmService = require("./bookmark-service");
 
 bmRouter
   .route("/")
   .get((req, res) => {
-    res.status(200).json(data);
+    BmService.getAllBookmarks(req.app.get("db"))
+      .then(bookmarks => res.json(bookmarks));
   })
   .post(dataParser, (req, res) => {
     const { title, rating, url, description } = req.body;
@@ -35,19 +37,22 @@ bmRouter
 
 bmRouter
   .route("/:id")
-  .get((req, res) => {
+  .get((req, res, next) => {
     const { id } = req.params;
-    let userBm = data.find((bm) => bm.id === id);
-
-    if (typeof userBm === "undefined") {
-      logger.error(`Failed get book with id: ${id}`);
-      return res.status(404).send(`Bookmark with ${id} was not found`);
-    }
-
-    logger.info(
-      `Successful get : Bookmark ${userBm.title} was retrieved with id: ${userBm.id}`
-    );
-    res.status(201).json(userBm);
+    BmService.getBookmarkById(req.app.get("db"), id)
+      .then(bookmarks => {
+        if (!bookmarks) {
+          logger.error(`Failed get book with id: ${id}`);
+          return res.status(404).json({
+            error: { message: "Bookmark doesn't exist" }
+          });
+        }
+        logger.info(
+          `Successful get : Bookmark ${bookmarks.title} was retrieved with id: ${bookmarks.id}`
+        );
+        res.status(201).json(bookmarks);
+      })
+      .catch(next);
   })
   .delete((req, res) => {
     const { id } = req.params;
