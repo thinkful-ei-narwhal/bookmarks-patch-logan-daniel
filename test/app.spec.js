@@ -68,36 +68,32 @@ describe("Bookmark endpoints", () => {
       });
     });
   });
+
+  it("posts a bookmark to the store", () => {
+    const postValues = {
+      title: "test-title",
+      url: "http://some.thing.com",
+      rating: "1",
+    };
+    return supertest(app)
+      .post("/bookmarks")
+      .send(postValues)
+      .set("Authorization", authTokenTest)
+      .expect(201)
+      .expect((res) => {
+        expect(res.body.title).to.equal(postValues.title);
+        expect(res.body.url).to.equal(postValues.url);
+      });
+  });
+  it("should delete the bookmark specified by id", () => {
+    return supertest(app)
+      .delete("/bookmarks/1")
+      .set("Authorization", authTokenTest)
+      .expect(201);
+  });
 });
 
 
-//     it("posts a bookmark to the store", () => {
-//       const postValues = {
-//         title: "test-title",
-//         url: "http://some.thing.com",
-//         rating: "1",
-//       };
-//       return supertest(app)
-//         .post("/bookmarks")
-//         .send(postValues)
-//         .set("Authorization", authTokenTest)
-//         .expect(201)
-//         .expect((res) => {
-//           expect(res.body.title).to.equal(postValues.title);
-//           expect(res.body.url).to.equal(postValues.url);
-//         });
-//     });
-//   });
 
-//   describe("GET all bookmarks unhappy path", () => {
-//     it("should delete the bookmark specified by id", () => {
-//       return supertest(app)
-//         .delete("/bookmarks/0123")
-//         .set("Authorization", authTokenTest)
-//         .expect(201)
-//         .expect(store.filter((x) => x.id == "0123"))
-//         .to.equal("undefined");
-//     });
-//   });
-// });
+
 

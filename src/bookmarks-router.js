@@ -1,16 +1,16 @@
-const express = require("express");
-const data = require("./store");
-const { v4: uuid } = require("uuid");
-const logger = require("./logger");
+const express = require('express');
+const data = require('./store');
+const { v4: uuid } = require('uuid');
+const logger = require('./logger');
 
 const bmRouter = express.Router();
 const dataParser = express.json();
-const BmService = require("./bookmark-service");
+const BmService = require('./bookmark-service');
 
 bmRouter
-  .route("/")
+  .route('/')
   .get((req, res) => {
-    BmService.getAllBookmarks(req.app.get("db"))
+    BmService.getAllBookmarks(req.app.get('db'))
       .then(bookmarks => res.json(bookmarks));
   })
   .post(dataParser, (req, res) => {
@@ -18,8 +18,8 @@ bmRouter
     const id = uuid();
 
     if (!title || !url) {
-      logger.error("Failed post : User didn't supply title or URL");
-      res.status(400).json({ error: "Title and URL are required" });
+      logger.error('Failed post : User didn\'t supply title or URL');
+      res.status(400).json({ error: 'Title and URL are required' });
     }
 
     const newBm = {
@@ -30,21 +30,21 @@ bmRouter
       description,
     };
 
-    data.push(newBm);
+    BmService.insertBookmark(req.app.get('db'), newBm);
     logger.info(`Successful post : Bookmark ${title} was added with id: ${id}`);
     res.status(201).json(newBm);
   });
 
 bmRouter
-  .route("/:id")
+  .route('/:id')
   .get((req, res, next) => {
     const { id } = req.params;
-    BmService.getBookmarkById(req.app.get("db"), id)
+    BmService.getBookmarkById(req.app.get('db'), id)
       .then(bookmarks => {
         if (!bookmarks) {
           logger.error(`Failed get book with id: ${id}`);
           return res.status(404).json({
-            error: { message: "Bookmark doesn't exist" }
+            error: { message: 'Bookmark doesn\'t exist' }
           });
         }
         logger.info(
@@ -56,18 +56,22 @@ bmRouter
   })
   .delete((req, res) => {
     const { id } = req.params;
-    let delBm = data.findIndex((bm) => bm.id === id);
-
-    if (delBm === -1) {
-      logger.error(`Failed to delete : Bookmark ${delBm.title} `);
-      return res.status(404).send(`Bookmark with id ${id} was not found`);
-    }
-
-    data.splice(delBm, 1);
-    logger.info(
-      `Successful delete : Bookmark ${delBm.title} was deleted with id: ${delBm.id}`
-    );
-    res.status(201).send(`Bookmark with id ${id} was deleted`);
+    BmService.getBookmarkById(req.app.get('db'), id)
+      .then(bookmark => {
+        if (!bookmark) {
+          logger.error(`Failed get delete with id: ${id}`);
+          return res.status(404).json({
+            error: { message: 'Bookmark doesn\'t exist' }
+          });
+        }
+        BmService.deleteBookmark(req.app.get('db'), bookmark.id)
+          .then(() => {
+            logger.info(
+              'Successful delete : Bookmark was deleted'
+            );
+            res.status(201).send(`Bookmark with id ${id} was deleted`);
+          });
+      });
   });
 
 module.exports = bmRouter;
