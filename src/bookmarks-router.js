@@ -6,9 +6,17 @@ const bmRouter = express.Router();
 const dataParser = express.json();
 const BmService = require('./bookmark-service');
 
+const serialize = bookmark => ({
+  id: bookmark.id,
+  rating: bookmark.rating,
+  title: xss(bookmark.title),
+  url: xss(bookmark.url),
+  description: xss(bookmark.description),
+})
+
 bmRouter
   .route('/')
-  .get((req, res) => {
+  .get((req, res, next) => {
     BmService.getAllBookmarks(req.app.get('db'))
       .then(bookmarks => res.json(bookmarks.map(b => ({...b, title: xss(b.title), url: xss(b.url), description: xss(b.description)}))))
   })
@@ -41,7 +49,7 @@ bmRouter
 
 bmRouter
   .route('/:id')
-  .get((req, res, next) => {
+  .all((req, res, next) => {
     const { id } = req.params;
     BmService.getBookmarkById(req.app.get('db'), id)
       .then(bookmark => {
@@ -54,16 +62,15 @@ bmRouter
         logger.info(
           `Successful get : Bookmark ${bookmark.title} was retrieved with id: ${bookmark.id}`
         );
-        res.status(201).json({
-          ...bookmark,
-          title: xss(bookmark.title),
-          url: xss(bookmark.url),
-          description: xss(bookmark.description)
-        });
+        res.bookmark = bookmark;
+        next()
       })
       .catch(next);
   })
-  .delete((req, res) => {
+  .get((req, res, next) => {
+    res.json(serialize(res.bookmark))
+  })
+  .delete((req, res, next) => {
     const { id } = req.params;
     BmService.getBookmarkById(req.app.get('db'), id)
       .then(bookmark => {
@@ -85,8 +92,11 @@ bmRouter
   .patch(dataParser, (req, res, next) => {
     const { title, rating, url, description } = req.body;
     const bookmarkToUpdate = { title, rating, url, description };
+    const id = req.params.id;
 
     const valueNum = Object.values(bookmarkToUpdate).filter(Boolean).length;
+
+    console.log(valueNum);
 
     if (valueNum === 0) {
       return res.status(400).json({
@@ -94,8 +104,8 @@ bmRouter
       });
     };
 
-    BmService.updateBookmark(req.app.get('db'), req.params.id, bookmarkToUpdate)
-      .then(data => {
+    BmService.updateBookmark(req.app.get('db'), id, bookmarkToUpdate)
+      .then(() => {
         res.status(204).end()
       })
       .catch(next)

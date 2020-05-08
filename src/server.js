@@ -1,14 +1,14 @@
-require("dotenv").config();
-const app = require("./app");
-const { PORT, NODE_ENV } = require("./config");
+require('dotenv').config();
+const app = require('./app');
+const { PORT, NODE_ENV } = require('./config');
 
 app.listen(PORT, () => console.log(`Server running in ${NODE_ENV} on ${PORT}`));
 
-const knex = require("knex");
+const knex = require('knex');
 
 const db = knex({
-  client: "pg",
+  client: 'pg',
   connection: process.env.DB_URL
 });
 
-app.set("db", db);
+app.set('db', db);

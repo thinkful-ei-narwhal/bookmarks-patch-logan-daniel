@@ -1,13 +1,13 @@
-const winston = require("winston");
-const config = require("./config");
+const winston = require('winston');
+const config = require('./config');
 
 const logger = winston.createLogger({
-  level: "error",
+  level: 'error',
   format: winston.format.json(),
-  transports: [new winston.transports.File({ filename: "error.log" })],
+  transports: [new winston.transports.File({ filename: 'error.log' })],
 });
 
-if (config.NODE_ENV !== "production") {
+if (config.NODE_ENV !== 'production') {
   logger.add(
     new winston.transports.Console({
       format: winston.format.simple(),

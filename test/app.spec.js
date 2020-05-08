@@ -1,7 +1,6 @@
 /* eslint-disable quotes */
 require('dotenv').config();
 const app = require("../src/app");
-let store = require("../src/store");
 const knex = require("knex");
 const testFixture = require('./testfixture');
 
@@ -28,7 +27,7 @@ describe("Bookmark endpoints", () => {
     describe("GET all bookmarks happy path", () => {
       it("Gets the bookmarks", () => {
         return supertest(app)
-          .get("/bookmarks")
+          .get("/api/bookmarks")
           .set("Authorization", authTokenTest)
           .expect(200)
           .then(res => {
@@ -39,16 +38,37 @@ describe("Bookmark endpoints", () => {
       it("should get a particular book by ID from store", () => {
         const idForTest = 1;
         return supertest(app)
-          .get(`/bookmarks/${idForTest}`)
+          .get(`/api/bookmarks/${idForTest}`)
           .set("Authorization", authTokenTest)
-          .expect(201, testObjectSeed[0]);
+          .expect(200, testObjectSeed[0]);
       });
 
       it("should delete the bookmark specified by id", () => {
         return supertest(app)
-          .delete("/bookmarks/1")
+          .delete("/api/bookmarks/1")
           .set("Authorization", authTokenTest)
-          .expect(201);
+          .expect(204);
+      });
+      it('patch should return 204', () => {
+        const idupdate = 2;
+        const patchValues = {
+          title: "test-title",
+          url: "http://some.thing.com",
+          rating: "1",
+          description: 'blah'
+        };
+        return supertest(app)
+          .patch(`/api/bookmarks/${idupdate}`)
+          .set("Authorization", authTokenTest)
+          .send(patchValues)
+          .expect(204);
+      });
+      it('patch responds 400 when no required fields supplied', () => {
+        const idupdate = 2;
+        return supertest(app)
+          .patch(`/api/bookmarks/${idupdate}`)
+          .send({relelevant: 'foo'})
+          .expect(400);
       });
     });
 
@@ -57,7 +77,7 @@ describe("Bookmark endpoints", () => {
 
       it("Gets the bookmarks", () => {
         return supertest(app)
-          .get("/bookmarks")
+          .get("/api/bookmarks")
           .set("Authorization", authTokenTest)
           .expect(200)
           .then(res => {
@@ -68,31 +88,38 @@ describe("Bookmark endpoints", () => {
       it("should get a particular book by ID from store", () => {
         const idForTest = 1;
         return supertest(app)
-          .get(`/bookmarks/${idForTest}`)
+          .get(`/api/bookmarks/${idForTest}`)
+          .set("Authorization", authTokenTest)
+          .expect(404);
+      });
+      it("posts a bookmark to the store", () => {
+        const postValues = {
+          title: "test-title",
+          url: "http://some.thing.com",
+          rating: "1",
+        };
+        return supertest(app)
+          .post("/api/bookmarks")
+          .send(postValues)
+          .set("Authorization", authTokenTest)
+          .expect(201)
+          .expect((res) => {
+            expect(res.body.title).to.equal(postValues.title);
+            expect(res.body.url).to.equal(postValues.url);
+          });
+      });
+      it('patch responds with 404', () => {
+        const bookmarkID = 23948;
+        return supertest(app)
+          .patch(`/api/bookmarks/${bookmarkID}`)
           .set("Authorization", authTokenTest)
           .expect(404);
       });
     });
   });
-
-  it("posts a bookmark to the store", () => {
-    const postValues = {
-      title: "test-title",
-      url: "http://some.thing.com",
-      rating: "1",
-    };
-    return supertest(app)
-      .post("/bookmarks")
-      .send(postValues)
-      .set("Authorization", authTokenTest)
-      .expect(201)
-      .expect((res) => {
-        expect(res.body.title).to.equal(postValues.title);
-        expect(res.body.url).to.equal(postValues.url);
-      });
-  });
-
 });
+
+  
 
 
 
